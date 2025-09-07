@@ -1,35 +1,26 @@
 package dev.ojas.p2p_chat_file_share.message.handler;
 
-import dev.ojas.p2p_chat_file_share.exception.StorageDirNullException;
 import dev.ojas.p2p_chat_file_share.message.data.*;
-import dev.ojas.p2p_chat_file_share.node.data.Peer;
-import dev.ojas.p2p_chat_file_share.node.service.NodeService;
 import dev.ojas.p2p_chat_file_share.room.Room;
 import dev.ojas.p2p_chat_file_share.room.RoomManager;
-import dev.ojas.p2p_chat_file_share.utils.CryptoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.nio.charset.StandardCharsets;
-import java.security.PublicKey;
-import java.util.Base64;
-import java.util.Objects;
 
 public class MessageHandler {
     private final RoomManager roomManager;
-    private final NodeService nodeService;
     private final HandshakeHandler handshakeHandler;
 
     @Autowired
-    public MessageHandler(RoomManager roomManager, NodeService nodeService, HandshakeHandler handshakeHandler) {
+    public MessageHandler(RoomManager roomManager, HandshakeHandler handshakeHandler) {
         this.roomManager = roomManager;
-        this.nodeService = nodeService;
         this.handshakeHandler = handshakeHandler;
     }
 
-    public void handleMessage(BaseMessage msg) {
+    public void handleMessage(BaseMessage msg, String ip, int port) {
         switch (msg.getType()) {
             case HANDSHAKE_MESSAGE:
-                handleHandshake((HandshakeMessage) msg);
+                handshakeHandler.handleIncomingHandshake((HandshakeMessage) msg, ip, port);
+                break;
+            case HANDSHAKE_ACK_MESSAGE:
                 break;
             case CHAT_MESSAGE:
                 handleChat((ChatMessage) msg);

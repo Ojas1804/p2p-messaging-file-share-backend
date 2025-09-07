@@ -9,6 +9,7 @@ import dev.ojas.p2p_chat_file_share.utils.CryptoUtils;
 import dev.ojas.p2p_chat_file_share.utils.persist.PersistenceManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyPair;
@@ -23,14 +24,13 @@ public class HandshakeMessageBuilder {
     private final AtomicLong sequenceCounter;
 
     @Autowired
-    private StorageProperties storageProperties;
-    @Autowired
     private PersistenceManager persistenceManager;
+    @Autowired
+    private StorageProperties storageProperties;
 
     public HandshakeMessageBuilder(Node node) {
         this.node = node;
-        String walletPathProperty = storageProperties.getDir();
-        this.walletPath = Paths.get(walletPathProperty);
+        this.walletPath = Paths.get(storageProperties.getDir());
         this.sequenceCounter = new AtomicLong(0);
     }
 
@@ -78,7 +78,7 @@ public class HandshakeMessageBuilder {
 
             // Re-sign with nonce included
             String messageToSign = createSignaturePayload(handshake);
-            KeyPair ephemeralKeyPair = generateEphemeralKeyPairFromIndex((int) (node.getIndices().getEphemeral() - 1));
+            KeyPair ephemeralKeyPair = generateEphemeralKeyPairFromIndex(node.getIndices().getEphemeral() - 1);
             String signature = signHandshakeMessage(messageToSign, ephemeralKeyPair.getPrivate());
             handshake.setSignature(signature);
         }
@@ -153,7 +153,7 @@ public class HandshakeMessageBuilder {
 
         // Create derivation info
         String derivationInfo = "ephemeral:" + index;
-        byte[] derivationInfoBytes = derivationInfo.getBytes("UTF-8");
+        byte[] derivationInfoBytes = derivationInfo.getBytes(StandardCharsets.UTF_8);
 
         // Derive ephemeral key material
         byte[] ephemeralSeed = CryptoUtils.hkdfExpand(
